@@ -117,31 +117,34 @@ class NER(nn.Module):
           elif label.startswith('B-'):
             status = label
             start = offset[0]
+            end = offset[1]
           else:
             print(f'parse error: {label} right after {status}!')
             status = 'O'
         elif status.startswith('B-'):
           if label.startswith('I-') and status[2:] == label[2:]:
             status = label
+            end = offset[1]
           elif label.startswith('B-'):
-            end = offset[0]
             entities.append((status[2:], (start, end)))
+            start = offset[0]
+            end = offset[1]
             status = label
           elif label == 'O':
-            end = offset[0]
             entities.append((status[2:], (start, end)))
             status = label
           else:
             print(f'parse error: {label} right after {status}!')
         elif status.startswith('I-'):
           if label.startswith('I-') and status[2:] == label[2:]:
+            end = offset[1]
             status = label
           elif label.startswith('B-'):
-            end = offset[0]
             entities.append((status[2:], (start, end)))
+            start = offset[0]
+            end = offset[1]
             status = label
           elif label == 'O':
-            end = offset[0]
             entities.append((status[2:], (start, end)))
             status = label
           else:
