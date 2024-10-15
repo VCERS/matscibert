@@ -4,6 +4,7 @@ from os.path import join
 import pathlib
 import torch
 from torch import nn
+import numpy as np
 from huggingface_hub import login
 from transformers import AutoConfig, AutoModel, AutoModelForTokenClassification, AutoTokenizer
 from tokenizers.normalizers import BertNormalizer
@@ -172,7 +173,8 @@ class RE(nn.Module):
     assert type(entity1) is tuple
     assert type(entity2) is tuple
     inputs = self.tokenizer(text, entity1, entity2)
-    return self.model(inputs)
+    logits = self.model(inputs).detach().cpu().numpy()
+    pred = np.argmax(logits, axis = 1)
 
 if __name__ == "__main__":
   ner = NER().to(torch.device('cuda'))
@@ -184,4 +186,10 @@ if __name__ == "__main__":
   entities = ner(texts)
   for entity, text in zip(entities, texts):
     print([{'entity':text[e[1][0]:e[1][1]], 'type': e[0]} for e in entity])
-  rc = RE().to(torch.device('cuda'))
+  re = RE().to(torch.device('cuda'))
+  text = 'Glasses are emerging as promising and efficient solid electrolytes for all-solid-state sodium-ion batteries.'
+  for id1, e1 in enumerate(entities):
+    for id2, e2 in enumerate(entities):
+      if id1 == id2: continue
+      pred = re(text, e1[1], e2[1])
+      print(pred.shape)
