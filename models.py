@@ -74,7 +74,7 @@ class BERT_RC(nn.Module):
     login('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')
     self.tokenizer = Tokenizer_RC()
     self.encoder = AutoModel.from_pretrained('m3rg-iitd/matscibert')
-    self.encoder.resize_token_embeddings(len(self.tokenizer))
+    self.encoder.resize_token_embeddings(self.tokenizer.vocab_size)
     self.dropout = nn.Dropout(0.1)
     self.linear = nn.Linear(2 * self.encoder.config.hidden_size, 16)
     ckpt = torch.load('models/re/pytorch_model.bin', map_location = next(self.model.parameters()).device)
