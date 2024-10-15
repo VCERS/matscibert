@@ -189,7 +189,7 @@ if __name__ == "__main__":
   re = RE().to(torch.device('cuda'))
   text = 'Glasses are emerging as promising and efficient solid electrolytes for all-solid-state sodium-ion batteries.'
   for id1, e1 in enumerate(entities[0]):
-    for id2, e2 in enumerate(entities):
+    for id2, e2 in enumerate(entities[0]):
       if id1 == id2: continue
       pred = re(text, e1[1], e2[1])
       print(pred.shape)
