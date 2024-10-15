@@ -69,21 +69,14 @@ class Tokenizer_RC(nn.Module):
             'attention_mask': attention_mask}
 
 class BERT_RC(nn.Module):
-  def __init__(self, ):
+  def __init__(self, tokenizer):
     super(BERT_RC, self).__init__()
     login('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')
     self.encoder = AutoModel.from_pretrained('m3rg-iitd/matscibert')
-    self.encoder.resize_token_embeddings(len(self.tokenizer.tokenizer))
+    self.encoder.resize_token_embeddings(len(tokenizer.tokenizer))
     self.dropout = nn.Dropout(0.1)
     self.linear = nn.Linear(2 * self.encoder.config.hidden_size, 16)
-    ckpt = torch.load('models/re/pytorch_model.bin', map_location = next(self.encoder.parameters()).device)
-    self.load_state_dict(ckpt)
-  def forward(self, text, entity1, entity2):
-    assert type(text) is str
-    assert type(entity1) is tuple
-    assert type(entity2) is tuple
-    tokenizer = Tokenizer_RC()
-    inputs = tokenizer(text, entity1, entity2)
+  def forward(self, **inputs):
     hidden_states = self.encoder(input_ids = inputs['input_ids'], attention_mask = inputs['attention_mask'])
     outs = torch.cat([hidden_states[torch.arange(len(hidden_states)), inputs['entity_marker'][:,0]],
                       hidden_states[torch.arange(len(hidden_states)), inputs['entity_marker'][:,1]]], dim = 1)
@@ -157,6 +150,21 @@ class NER(nn.Module):
       results.append(entities)
     return results
 
+class RE(nn.Module):
+  def __init__(self, ):
+    super(RE, self).__init__()
+    self.tokenizer = Tokenizer_RC()
+    self.model = BERT_RC(self.tokenizer)
+    ckpt = torch.load('models/rc/pytorch_model.bin', map_location = next(self.model.parameters()).device)
+    self.model.load_state_dict(ckpt)
+    self.tags = [] # FIXME: find out the classifcations
+  def forward(self, text, entity1, entity2):
+    assert type(text) is str
+    assert type(entity1) is tuple
+    assert type(entity2) is tuple
+    inputs = self.tokenizer(text, entity1, entity2)
+    return self.model(inputs)
+
 if __name__ == "__main__":
   ner = NER().to(torch.device('cuda'))
   texts = ['Glasses are emerging as promising and efficient solid electrolytes for all-solid-state sodium-ion batteries.',
@@ -167,4 +175,4 @@ if __name__ == "__main__":
   entities = ner(texts)
   for entity, text in zip(entities, texts):
     print([{'entity':text[e[1][0]:e[1][1]], 'type': e[0]} for e in entity])
-  rc = BERT_RC().to(torch.device('cuda'))
+  rc = RE().to(torch.device('cuda'))
