@@ -189,9 +189,9 @@ if __name__ == "__main__":
   for entity, text in zip(entities, texts):
     print([{'entity':text[e[1][0]:e[1][1]], 'type': e[0]} for e in entity])
   re = RE().to(torch.device('cuda'))
-  text = 'Glasses are emerging as promising and efficient solid electrolytes for all-solid-state sodium-ion batteries.'
-  for id1, e1 in enumerate(entities[0]):
-    for id2, e2 in enumerate(entities[0]):
-      if id1 == id2: continue
-      pred = re(text, e1[1], e2[1])
-      print(f'({text[e1[1][0]:e1[1][1]]},{pred},{text[e2[1][0]:e2[1][1]]})')
+  for i in range(len(texts)):
+    for id1, e1 in enumerate(entities[i]):
+      for id2, e2 in enumerate(entities[i]):
+        if id1 == id2: continue
+        pred = re(texts[i], e1[1], e2[1])
+        print(f'({texts[i][e1[1][0]:e1[1][1]]},{pred},{texts[i][e2[1][0]:e2[1][1]]})')
