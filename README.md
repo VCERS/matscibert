@@ -12,4 +12,4 @@ this project provide inference code for MatSciBERT
 
 - put the MatSciBERT/ner/models/matscholar/pytorch_model.bin under directory **models/ner** of root source directory.
 
-- put the MatSciBERT/cls/model/pytorch_model.bin under directory **models/cls** of root source directory.
+- put the MatSciBERT/relation_classification/model/pytorch_model.bin under directory **models/re** of root source directory.
