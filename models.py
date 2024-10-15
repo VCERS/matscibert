@@ -176,6 +176,7 @@ class RE(nn.Module):
     inputs = self.tokenizer(text, entity1, entity2)
     logits = self.model(**inputs).detach().cpu().numpy()
     pred = np.argmax(logits, axis = 1)
+    return pred
 
 if __name__ == "__main__":
   ner = NER().to(torch.device('cuda'))
