@@ -1,23 +1,58 @@
 #!/usr/bin/python3
 
+import pathlib
 import torch
 from torch import nn
 from huggingface_hub import login
-from transformers import AutoConfig, AutoModelForTokenClassification, AutoTokenizer
+from transformers import AutoConfig, AutoModel, AutoModelForTokenClassification, AutoTokenizer
+from tokenizers.normalizers import BertNormalizer
 from torchcrf import CRF
 
 class BERT_CRF(nn.Module):
-    def __init__(self, num_labels = 15):
-        super(BERT_CRF, self).__init__()
-        login('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')
-        config = AutoConfig.from_pretrained('m3rg-iitd/matscibert')
-        config.num_labels = num_labels
-        self.encoder = AutoModelForTokenClassification.from_config(config)
-        self.crf = CRF(num_labels, batch_first=True)
-    def forward(self, **inputs):
-        results = self.encoder(**inputs,return_dict = True)
-        labels = self.crf.decode(results.logits,inputs['attention_mask'].to(torch.bool))
-        return labels
+  def __init__(self, num_labels = 15):
+    super(BERT_CRF, self).__init__()
+    login('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')
+    config = AutoConfig.from_pretrained('m3rg-iitd/matscibert')
+    config.num_labels = num_labels
+    self.encoder = AutoModelForTokenClassification.from_config(config)
+    self.crf = CRF(num_labels, batch_first=True)
+  def forward(self, **inputs):
+    results = self.encoder(**inputs,return_dict = True)
+    labels = self.crf.decode(results.logits,inputs['attention_mask'].to(torch.bool))
+    return labels
+
+class Tokenizer_RC(nn.Module):
+  def __init__(self, ):
+    self.tokenizer = AutoTokenizer.from_pretrained('m3rg-iitd/matscibert')
+    self.tokenizer.add_tokens(['[E1]', '[/E1]', '[E2]', '[/E2]'])
+    self.norm = BertNormalizer(lowercase=False, strip_accents=True, clean_text=True, handle_chinese_chars=True)
+    with open(os.path.join(pathlib.Path(__file__).parent.resolve(), 'vocab_mappings.txt'), 'r') as f:
+      self.mappings = f.read().strip().split('\n')
+  def normalize(self, text):
+    text = [self.norm.normalize_str(s) for s in text.split('\n')]
+    out = []
+    for s in text:
+        norm_s = ''
+        for c in s:
+            norm_s += self.mappings.get(c, ' ')
+        out.append(norm_s)
+    return '\n'.join(out)
+  def tokenize(self, text):
+    self.tokenizer.tokenize(self.normalize(text))
+  def forward(self, text):
+    # TODO
+
+class BERT_RC(nn.Module):
+  def __init__(self, ):
+    super(BERT_RC, self).__init__()
+    login('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')
+    self.encoder = AutoModel.from_pretrained('m3rg-iitd/matscibert')
+    self.encoder.resize_token_embeddings(len(self.tokenizer))
+    self.dropout = nn.Dropout(0.1)
+    self.linear = nn.Linear(2 * self.encoder.config.hidden_size, num_labels)
+  def forward(self, **inputs):
+    hidden_states = self.encoder(input_ids = inputs['input_ids'], attention_mask = inputs['attention_mask'])
+    # TODO
 
 class NER(nn.Module):
   def __init__(self, ):
