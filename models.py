@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+from os.path import join
 import pathlib
 import torch
 from torch import nn
@@ -26,7 +27,7 @@ class Tokenizer_RC(nn.Module):
     self.tokenizer = AutoTokenizer.from_pretrained('m3rg-iitd/matscibert')
     self.tokenizer.add_tokens(['[E1]', '[/E1]', '[E2]', '[/E2]'])
     self.norm = BertNormalizer(lowercase=False, strip_accents=True, clean_text=True, handle_chinese_chars=True)
-    with open(os.path.join(pathlib.Path(__file__).parent.resolve(), 'vocab_mappings.txt'), 'r') as f:
+    with open(join(pathlib.Path(__file__).parent.resolve(), 'vocab_mappings.txt'), 'r') as f:
       self.mappings = f.read().strip().split('\n')
   def normalize(self, text):
     text = [self.norm.normalize_str(s) for s in text.split('\n')]
