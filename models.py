@@ -174,7 +174,7 @@ class RE(nn.Module):
     assert type(entity1) is tuple
     assert type(entity2) is tuple
     inputs = self.tokenizer(text, entity1, entity2)
-    logits = self.model(inputs).detach().cpu().numpy()
+    logits = self.model(**inputs).detach().cpu().numpy()
     pred = np.argmax(logits, axis = 1)
 
 if __name__ == "__main__":
