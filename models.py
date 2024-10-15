@@ -43,7 +43,7 @@ class Tokenizer_RC(nn.Module):
     return '\n'.join(out)
   def tokenize(self, text):
     assert type(text) is str
-    self.tokenizer.tokenize(self.normalize(text))
+    return self.tokenizer.tokenize(self.normalize(text))
   def forward(self, text, entity1, entity2):
     assert type(text) is str
     assert type(entity1) is tuple
