@@ -24,6 +24,7 @@ class BERT_CRF(nn.Module):
 
 class Tokenizer_RC(nn.Module):
   def __init__(self, ):
+    super(Tokenizer_RC, self).__init__()
     self.tokenizer = AutoTokenizer.from_pretrained('m3rg-iitd/matscibert')
     self.tokenizer.add_tokens(['[E1]', '[/E1]', '[E2]', '[/E2]'])
     self.norm = BertNormalizer(lowercase=False, strip_accents=True, clean_text=True, handle_chinese_chars=True)
