@@ -72,7 +72,6 @@ class BERT_RC(nn.Module):
   def __init__(self, ):
     super(BERT_RC, self).__init__()
     login('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')
-    self.tokenizer = Tokenizer_RC()
     self.encoder = AutoModel.from_pretrained('m3rg-iitd/matscibert')
     self.encoder.resize_token_embeddings(len(self.tokenizer.tokenizer))
     self.dropout = nn.Dropout(0.1)
@@ -83,7 +82,8 @@ class BERT_RC(nn.Module):
     assert type(text) is str
     assert type(entity1) is tuple
     assert type(entity2) is tuple
-    inputs = self.tokenizer(text, entity1, entity2)
+    tokenizer = Tokenizer_RC()
+    inputs = tokenizer(text, entity1, entity2)
     hidden_states = self.encoder(input_ids = inputs['input_ids'], attention_mask = inputs['attention_mask'])
     outs = torch.cat([hidden_states[torch.arange(len(hidden_states)), inputs['entity_marker'][:,0]],
                       hidden_states[torch.arange(len(hidden_states)), inputs['entity_marker'][:,1]]], dim = 1)
