@@ -168,7 +168,7 @@ class RE(nn.Module):
     ckpt = torch.load('models/re/pytorch_model.bin', map_location = next(self.model.parameters()).device)
     del ckpt['encoder.embeddings.position_ids']
     self.model.load_state_dict(ckpt)
-    self.tags = [] # FIXME: find out the classifcations
+    self.tags = ['Amount_Of', 'Apparatus_Attr_Of', 'Apparatus_Of', 'Atmospheric_Material', 'Brand_Of', 'Condition_Of', 'Coref_Of', 'Descriptor_Of', 'Next_Operation', 'Number_Of', 'Participant_Material', 'Property_Of', 'Recipe_Precursor', 'Recipe_Target', 'Solvent_Material', 'Type_Of']
   def forward(self, text, entity1, entity2):
     assert type(text) is str
     assert type(entity1) is tuple
@@ -176,7 +176,7 @@ class RE(nn.Module):
     inputs = self.tokenizer(text, entity1, entity2)
     logits = self.model(**inputs).detach().cpu().numpy()
     pred = np.argmax(logits, axis = 1)
-    return pred
+    return self.tags[pred[0]]
 
 if __name__ == "__main__":
   ner = NER().to(torch.device('cuda'))
@@ -194,4 +194,4 @@ if __name__ == "__main__":
     for id2, e2 in enumerate(entities[0]):
       if id1 == id2: continue
       pred = re(text, e1[1], e2[1])
-      print(pred.shape)
+      print(pred)
