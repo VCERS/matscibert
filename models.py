@@ -84,8 +84,8 @@ class BERT_RC(nn.Module):
     self.dropout = nn.Dropout(0.1)
     self.linear = nn.Linear(2 * self.encoder.config.hidden_size, 16)
   def forward(self, **inputs):
-    input_ids = torch.tensor(inputs['input_ids'], dtype = torch.int64).unsqueeze(dim = 0)
-    attention_mask = torch.tensor(inputs['attention_mask'], dtype = torch.int64).unsqueeze(dim = 0)
+    input_ids = torch.tensor(inputs['input_ids'], dtype = torch.int64).unsqueeze(dim = 0).to(next(self.parameters()).device)
+    attention_mask = torch.tensor(inputs['attention_mask'], dtype = torch.int64).unsqueeze(dim = 0).to(next(self.parameters()).device)
     hidden_states = self.encoder(input_ids = input_ids, attention_mask = attention_mask)
     outs = torch.cat([hidden_states[torch.arange(len(hidden_states)), inputs['entity_marker'][:,0]],
                       hidden_states[torch.arange(len(hidden_states)), inputs['entity_marker'][:,1]]], dim = 1)
