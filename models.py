@@ -32,27 +32,62 @@ class Tokenizer_RC(nn.Module):
     text = [self.norm.normalize_str(s) for s in text.split('\n')]
     out = []
     for s in text:
-        norm_s = ''
-        for c in s:
-            norm_s += self.mappings.get(c, ' ')
-        out.append(norm_s)
+      norm_s = ''
+      for c in s:
+        norm_s += self.mappings.get(c, ' ')
+      out.append(norm_s)
     return '\n'.join(out)
   def tokenize(self, text):
+    assert type(text) is str
     self.tokenizer.tokenize(self.normalize(text))
-  def forward(self, text):
-    # TODO
+  def forward(self, text, entity1, entity2):
+    assert type(text) is str
+    assert type(entity1) is tuple
+    assert type(entity2) is tuple
+    s1, e1 = entity1
+    s2, e2 = entity2
+    s1, e1, s2, e2 = (s1, e1, s2, e2) if s1 < s2 else (s2, e2, s1, e1)
+    tokens = self.tokenize(text[:s1]) + ['[E1]'] + self.tokenize(text[s1:e1]) + ['[/E1]'] + \
+             self.tokenize(text[e1:s2]) + ['[E2]'] + self.tokenize(text[s2:e2]) + ['[/E2]'] + \
+             self.tokenize(text[e2:])
+    if len(tokens) <= 512 - 2:
+      tokens = ['[CLS]'] + tokens + ['[SEP]']
+    else:
+      rem = (512 - 2) - (e2 - s1 + 1)
+      assert rem >= 0
+      s = max(0, s1 - rem // 2)
+      e = min(len(tokens) - 1, e2 + rem // 2)
+      tokens = ['[CLS]'] + tokens[s:e+1] + ['[SEP]']
+    entity_marker = [tokens.index('[E1]'), tokens.index('[E2]')]
+    tokens = self.tokenizer.convert_tokens_to_ids(tokens)
+    assert len(tokens) <= 512
+    input_ids = tokens
+    attention_mask = [1] * len(tokens)
+    return {'entity_marker': entity_marker,
+            'input_ids': input_ids,
+            'attention_mask': attention_mask}
 
 class BERT_RC(nn.Module):
   def __init__(self, ):
     super(BERT_RC, self).__init__()
     login('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')
+    self.tokenizer = Tokenizer_RC()
     self.encoder = AutoModel.from_pretrained('m3rg-iitd/matscibert')
     self.encoder.resize_token_embeddings(len(self.tokenizer))
     self.dropout = nn.Dropout(0.1)
-    self.linear = nn.Linear(2 * self.encoder.config.hidden_size, num_labels)
-  def forward(self, **inputs):
+    self.linear = nn.Linear(2 * self.encoder.config.hidden_size, 16)
+    ckpt = torch.load('models/re/pytorch_model.bin', map_location = next(self.model.parameters()).device)
+    self.load_state_dict(ckpt)
+  def forward(self, text, entity1, entity2):
+    assert type(text) is str
+    assert type(entity1) is tuple
+    assert type(entity2) is tuple
+    inputs = self.tokenizer(text, entity1, entity2)
     hidden_states = self.encoder(input_ids = inputs['input_ids'], attention_mask = inputs['attention_mask'])
-    # TODO
+    outs = torch.cat([hidden_states[torch.arange(len(hidden_states)), inputs['entity_marker'][:,0]],
+                      hidden_states[torch.arange(len(hidden_states)), inputs['entity_marker'][:,1]]], dim = 1)
+    logits = self.linear(self.dropout(outs))
+    return logits
 
 class NER(nn.Module):
   def __init__(self, ):
@@ -131,4 +166,4 @@ if __name__ == "__main__":
   entities = ner(texts)
   for entity, text in zip(entities, texts):
     print([{'entity':text[e[1][0]:e[1][1]], 'type': e[0]} for e in entity])
-      
+  rc = BERT_RC().to(torch.device('cuda'))
