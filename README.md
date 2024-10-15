@@ -8,6 +8,8 @@ this project provide inference code for MatSciBERT
 
 - download the pretrained model from [zenodo](https://zenodo.org/records/6413296).
 
-- unzip MatSciBERT.zip
+- unzip MatSciBERT.zip.
 
-- put the MatSciBERT/ner/models/matscholar/pytorch_model.bin under directory **models/ner** of root source directory
+- put the MatSciBERT/ner/models/matscholar/pytorch_model.bin under directory **models/ner** of root source directory.
+
+- put the MatSciBERT/cls/model/pytorch_model.bin under directory **models/cls** of root source directory.
