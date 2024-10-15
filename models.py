@@ -31,6 +31,7 @@ class Tokenizer_RC(nn.Module):
     self.norm = BertNormalizer(lowercase=False, strip_accents=True, clean_text=True, handle_chinese_chars=True)
     with open(join(pathlib.Path(__file__).parent.resolve(), 'vocab_mappings.txt'), 'r') as f:
       self.mappings = f.read().strip().split('\n')
+    self.mappings = {m[0]: m[2:] for m in mappings}
   def normalize(self, text):
     text = [self.norm.normalize_str(s) for s in text.split('\n')]
     out = []
@@ -50,7 +51,7 @@ class Tokenizer_RC(nn.Module):
     s1, e1 = entity1
     s2, e2 = entity2
     s1, e1, s2, e2 = (s1, e1, s2, e2) if s1 < s2 else (s2, e2, s1, e1)
-    tokens = self.tokenize(text[:s1]) + ['[E1]'] + self.tokenize(text[s1:e1]) + ['[/E1]'] + \
+    tokens = (self.tokenize(text[:s1]) if text[:s1] != '' else []) + ['[E1]'] + self.tokenize(text[s1:e1]) + ['[/E1]'] + \
              self.tokenize(text[e1:s2]) + ['[E2]'] + self.tokenize(text[s2:e2]) + ['[/E2]'] + \
              self.tokenize(text[e2:])
     s1 = tokens.index('[E1]')
