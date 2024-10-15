@@ -77,7 +77,7 @@ class BERT_RC(nn.Module):
     self.encoder.resize_token_embeddings(len(self.tokenizer.tokenizer))
     self.dropout = nn.Dropout(0.1)
     self.linear = nn.Linear(2 * self.encoder.config.hidden_size, 16)
-    ckpt = torch.load('models/re/pytorch_model.bin', map_location = next(self.model.parameters()).device)
+    ckpt = torch.load('models/re/pytorch_model.bin', map_location = next(self.encoder.parameters()).device)
     self.load_state_dict(ckpt)
   def forward(self, text, entity1, entity2):
     assert type(text) is str
