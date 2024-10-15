@@ -5,7 +5,6 @@ import pathlib
 import torch
 from torch import nn
 import numpy as np
-from huggingface_hub import login
 from transformers import AutoConfig, AutoModel, AutoModelForTokenClassification, AutoTokenizer
 from tokenizers.normalizers import BertNormalizer
 from torchcrf import CRF
@@ -13,7 +12,6 @@ from torchcrf import CRF
 class BERT_CRF(nn.Module):
   def __init__(self, num_labels = 15):
     super(BERT_CRF, self).__init__()
-    login('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')
     config = AutoConfig.from_pretrained('m3rg-iitd/matscibert')
     config.num_labels = num_labels
     self.encoder = AutoModelForTokenClassification.from_config(config)
@@ -78,7 +76,6 @@ class Tokenizer_RC(nn.Module):
 class BERT_RC(nn.Module):
   def __init__(self, tokenizer):
     super(BERT_RC, self).__init__()
-    login('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')
     self.encoder = AutoModel.from_pretrained('m3rg-iitd/matscibert')
     self.encoder.resize_token_embeddings(len(tokenizer.tokenizer))
     self.dropout = nn.Dropout(0.1)
@@ -87,8 +84,8 @@ class BERT_RC(nn.Module):
     input_ids = torch.tensor(inputs['input_ids'], dtype = torch.int64).unsqueeze(dim = 0).to(next(self.parameters()).device)
     attention_mask = torch.tensor(inputs['attention_mask'], dtype = torch.int64).unsqueeze(dim = 0).to(next(self.parameters()).device)
     hidden_states = self.encoder(input_ids = input_ids, attention_mask = attention_mask)
-    outs = torch.cat([hidden_states[torch.arange(len(hidden_states)), inputs['entity_marker'][:,0]],
-                      hidden_states[torch.arange(len(hidden_states)), inputs['entity_marker'][:,1]]], dim = 1)
+    outs = torch.cat([hidden_states.last_hidden_state[torch.arange(len(hidden_states)), inputs['entity_marker'][0]],
+                      hidden_states.last_hidden_state[torch.arange(len(hidden_states)), inputs['entity_marker'][1]]], dim = 1)
     logits = self.linear(self.dropout(outs))
     return logits
 
