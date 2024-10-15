@@ -23,7 +23,7 @@ class NER(nn.Module):
   def __init__(self, ):
     super(NER, self).__init__()
     self.model = BERT_CRF()
-    ckpt = torch.load('pytorch_model.bin', map_location = next(self.model.parameters()).device)
+    ckpt = torch.load('models/ner/pytorch_model.bin', map_location = next(self.model.parameters()).device)
     del ckpt['encoder.bert.embeddings.position_ids']
     self.model.load_state_dict(ckpt)
     self.tokenizer = AutoTokenizer.from_pretrained('m3rg-iitd/matscibert')
