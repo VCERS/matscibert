@@ -95,5 +95,5 @@ if __name__ == "__main__":
           'XRD patterns of glass-ceramics sintered at different holding times; identifying rutile TiO2 crystal grains.']
   entities = ner(texts)
   for entity, text in zip(entities, texts):
-    print([(text[e[1][0]:e[1][1]], e[0]) for e in entity])
+    print([{'entity':text[e[1][0]:e[1][1]], 'type': e[0]} for e in entity])
       
