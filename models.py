@@ -155,7 +155,7 @@ class RE(nn.Module):
     super(RE, self).__init__()
     self.tokenizer = Tokenizer_RC()
     self.model = BERT_RC(self.tokenizer)
-    ckpt = torch.load('models/rc/pytorch_model.bin', map_location = next(self.model.parameters()).device)
+    ckpt = torch.load('models/re/pytorch_model.bin', map_location = next(self.model.parameters()).device)
     self.model.load_state_dict(ckpt)
     self.tags = [] # FIXME: find out the classifcations
   def forward(self, text, entity1, entity2):
