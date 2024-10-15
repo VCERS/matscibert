@@ -85,8 +85,8 @@ class BERT_RC(nn.Module):
     attention_mask = torch.tensor(inputs['attention_mask'], dtype = torch.int64).unsqueeze(dim = 0).to(next(self.parameters()).device)
     entity_marker = torch.tensor(inputs['entity_marker'], dtype = torch.int64).to(next(self.parameters()).device)
     hidden_states = self.encoder(input_ids = input_ids, attention_mask = attention_mask)
-    outs = torch.cat([hidden_states.hidden_states[:, entity_marker[0]],
-                      hidden_states.hidden_states[:, entity_marker[1]]], dim = 1) # outs.shape = (1, 768*2)
+    outs = torch.cat([hidden_states.last_hidden_state[:, entity_marker[0]],
+                      hidden_states.last_hidden_state[:, entity_marker[1]]], dim = 1) # outs.shape = (1, 768*2)
     logits = self.linear(self.dropout(outs))
     return logits
 
