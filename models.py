@@ -52,6 +52,10 @@ class Tokenizer_RC(nn.Module):
     tokens = self.tokenize(text[:s1]) + ['[E1]'] + self.tokenize(text[s1:e1]) + ['[/E1]'] + \
              self.tokenize(text[e1:s2]) + ['[E2]'] + self.tokenize(text[s2:e2]) + ['[/E2]'] + \
              self.tokenize(text[e2:])
+    s1 = tokens.index('[E1]')
+    e1 = tokens.index('[/E1]')
+    s2 = tokens.index('[E2]')
+    e2 = tokens.index('[/E2]')
     if len(tokens) <= 512 - 2:
       tokens = ['[CLS]'] + tokens + ['[SEP]']
     else:
@@ -59,7 +63,7 @@ class Tokenizer_RC(nn.Module):
       assert rem >= 0
       s = max(0, s1 - rem // 2)
       e = min(len(tokens) - 1, e2 + rem // 2)
-      tokens = ['[CLS]'] + tokens[s:e+1] + ['[SEP]']
+      tokens = ['[CLS]'] + tokens[s:e + 1] + ['[SEP]']
     entity_marker = [tokens.index('[E1]'), tokens.index('[E2]')]
     tokens = self.tokenizer.convert_tokens_to_ids(tokens)
     assert len(tokens) <= 512
