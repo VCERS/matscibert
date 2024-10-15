@@ -156,6 +156,7 @@ class RE(nn.Module):
     self.tokenizer = Tokenizer_RC()
     self.model = BERT_RC(self.tokenizer)
     ckpt = torch.load('models/re/pytorch_model.bin', map_location = next(self.model.parameters()).device)
+    del ckpt['encoder.bert.embeddings.position_ids']
     self.model.load_state_dict(ckpt)
     self.tags = [] # FIXME: find out the classifcations
   def forward(self, text, entity1, entity2):
