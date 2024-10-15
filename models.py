@@ -194,4 +194,4 @@ if __name__ == "__main__":
     for id2, e2 in enumerate(entities[0]):
       if id1 == id2: continue
       pred = re(text, e1[1], e2[1])
-      print(pred)
+      print(f'({text[e1[1][0]:e1[1][1]]},{pred},{text[e2[1][0]:e2[1][1]]})')
