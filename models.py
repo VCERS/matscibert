@@ -29,11 +29,61 @@ class NER(nn.Module):
     self.tokenizer = AutoTokenizer.from_pretrained('m3rg-iitd/matscibert')
     self.tags = ['B-APL', 'B-CMT', 'B-DSC', 'B-MAT', 'B-PRO', 'B-SMT', 'B-SPL', 'I-APL', 'I-CMT', 'I-DSC', 'I-MAT', 'I-PRO', 'I-SMT', 'I-SPL', 'O']
   def forward(self, text):
-    encode_input = self.tokenizer(text, padding = True, return_tensors = 'pt').to(next(self.model.parameters()).device)
+    assert type(text) is list
+    encode_input = self.tokenizer(text, padding = True, return_tensors = 'pt', return_offsets_mapping = True).to(next(self.model.parameters()).device)
+    offset_mapping = encode_input.pop('offset_mapping')
     output = self.model(**encode_input)
     results = list()
-    for sample in output:
-      results.append([self.tags[t] for t in sample])
+    for idx, sample in enumerate(output):
+      input_ids = encode_input['input_ids'][idx]
+      attention_mask = encode_input['attention_mask'][idx]
+      input_ids = torch.masked_select(input_ids, attention_mask.to(torch.bool))
+      offsets = offset_mapping[idx].detach().cpu().numpy()
+      labels = [self.tags[t] for t in sample]
+      assert len(input_ids) == len(labels)
+      status = 'O'
+      start = None
+      end = None
+      entities = list()
+      for input_id, label, offset in zip(input_ids, labels, offsets):
+        if status == 'O':
+          if label == 'O':
+            status = label
+          elif label.startswith('B-'):
+            status = label
+            start = offset[0]
+          else:
+            print(f'parse error: {label} right after {status}!')
+            status = 'O'
+        elif status.startswith('B-'):
+          if label.startswith('I-') and status[2:] == label[2:]:
+            status = label
+          elif label.startswith('B-'):
+            end = offset[0]
+            entities.append((status[2:], (start, end)))
+            status = label
+          elif label == 'O':
+            end = offset[0]
+            entities.append((status[2:], (start, end)))
+            status = label
+          else:
+            print(f'parse error: {label} right after {status}!')
+        elif status.startswith('I-'):
+          if label.startswith('I-') and status[2:] == label[2:]:
+            status = label
+          elif label.startswith('B-'):
+            end = offset[0]
+            entities.append((status[2:], (start, end)))
+            status = label
+          elif label == 'O':
+            end = offset[0]
+            entities.append((status[2:], (start, end)))
+            status = label
+          else:
+            print(f'parse error: {label} right after {status}!')
+        else:
+          raise Exception(f'label: {label}, status: {status}')
+      results.append(entities)
     return results
 
 if __name__ == "__main__":
